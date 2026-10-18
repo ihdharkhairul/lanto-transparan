@@ -1,0 +1,27 @@
+import {useState} from 'react';import {Link} from 'react-router-dom';import {useStore} from './store';import {rp,sum} from './data/mock';import {Form,Banner,Empty} from './layout';
+const LK='lanto-demo-login',S=['Diterima','Diproses','Selesai'],$=(n,l,o={})=>({n,l,req:1,...o}),N=(n,l)=>$(n,l,{t:'number',m:1});
+const CFG={
+programs:{t:'Keuangan',f:[$('tahun','Tahun',{t:'number'}),$('bidang','Bidang'),$('nama','Program'),N('anggaran','Anggaran'),N('realisasi','Realisasi')],chk:v=>+v.realisasi>+v.anggaran&&'Realisasi tidak boleh melebihi anggaran'},
+units:{t:'BUMDes',f:[$('nama','Unit usaha'),N('pendapatan','Pendapatan'),N('biaya','Biaya')]},
+gangguan:{t:'Air Bersih',f:[$('wilayah','Wilayah'),$('status','Status',{opts:['Normal','Gangguan','Perbaikan']}),$('ket','Keterangan')]},
+layanan:{t:'Pelayanan',f:[$('nama','Layanan'),N('biaya','Biaya'),$('estimasi','Estimasi'),$('syarat','Persyaratan (pisah dengan ;)')]},
+berita:{t:'Berita',f:[$('judul','Judul',{min:5}),$('kategori','Kategori',{opts:['Berita','Pengumuman','Program']}),$('tanggal','Tanggal (YYYY-MM-DD)'),$('ringkas','Ringkasan',{t:'area'})]},
+dokumen:{t:'Dokumen',f:[$('judul','Judul'),$('kategori','Kategori',{opts:['Keuangan','BUMDes','Pelayanan','Umum']}),$('tahun','Tahun',{t:'number'})]},
+tickets:{t:'Pengaduan',f:[$('id','No. Tiket'),$('jenis','Jenis',{opts:['Aspirasi','Air','Layanan']}),$('judul','Judul'),$('kategori','Kategori'),$('status','Status',{opts:S}),$('tanggal','Tanggal')]}};
+const Logo=({s=56})=><img src="/images/logo-lanto.png" alt="Logo Lanto Transparan" style={{width:s,height:s}}/>;
+export default function Admin(){const {d,set,reset}=useStore();
+const [on,setOn]=useState(()=>{try{return localStorage.getItem(LK)==='1'}catch{return false}});
+const [tab,setTab]=useState('ringkasan'),[q,setQ]=useState(''),[fl,setFl]=useState(''),[ed,setEd]=useState(null);
+if(!on)return <><Banner/><div className="wrap sec" style={{maxWidth:420}}><div className="card" style={{textAlign:'center'}}><Logo s={110}/><h2>Login Admin (DEMO)</h2><p className="warn">Login simulasi — bukan autentikasi nyata dan tidak aman untuk produksi. Kredensial demo: <b>admin</b> / <b>demo123</b></p>
+<Form btn="Masuk" fields={[$('u','Username'),$('p','Password',{t:'password'})]} onSubmit={v=>{if(v.u.trim().toLowerCase()==='admin'&&v.p.trim()==='demo123'){try{localStorage.setItem(LK,'1')}catch{}setOn(true);return ''}return '!Username atau password demo salah.'}}/><Link to="/">← Kembali ke situs</Link></div></div></>;
+const c=CFG[tab],sel=c?.f.find(f=>f.opts),rows=c?d[tab].filter(r=>(!fl||r[sel.n]===fl)&&JSON.stringify(r).toLowerCase().includes(q.toLowerCase())):[];
+const conv=v=>Object.fromEntries(Object.entries(v).map(([k,x])=>[k,c.f.find(f=>f.n===k)?.t==='number'?Number(x):x]));
+const save=v=>{const o=conv(v);if(ed.id!==undefined&&ed.__e)set(tab,a=>a.map(r=>r.id===ed.id?{...r,...o}:r));else set(tab,a=>[...a,{id:tab==='tickets'?o.id:Date.now(),...o}]);setEd(null);return ''};
+const cell=(r,f)=>f.m?rp(r[f.n]):String(r[f.n]??'');
+return <><Banner/><div className="wrap sec"><div className="row sp"><div className="row"><Logo/><div><h2 style={{margin:0}}>Dashboard Admin (DEMO)</h2><small>Simulasi — bukan sistem produksi</small></div></div><div className="row"><button className="btn sm ghost" onClick={()=>{if(confirm('Reset semua data demo?')){reset();setEd(null)}}}>Reset data demo</button><button className="btn sm" onClick={()=>{try{localStorage.removeItem(LK)}catch{}setOn(false)}}>Keluar</button></div></div>
+<p className="warn">Perubahan hanya tersimpan di browser ini (localStorage), belum tersinkron antar pengguna, dan tidak aman untuk produksi.</p>
+<div className="tabs">{['ringkasan',...Object.keys(CFG)].map(k=><button key={k} className={tab===k?'on':''} onClick={()=>{setTab(k);setQ('');setFl('');setEd(null)}}>{k==='ringkasan'?'Ringkasan':CFG[k].t}</button>)}</div>
+{tab==='ringkasan'?<div className="grid g4"><div className="card stat"><b>{rp(sum(d.programs.filter(p=>p.tahun===2026),'anggaran'))}</b><span>Anggaran 2026</span></div><div className="card stat"><b>{rp(sum(d.programs.filter(p=>p.tahun===2026),'realisasi'))}</b><span>Realisasi 2026</span></div><div className="card stat"><b>{d.tickets.filter(t=>t.status!=='Selesai').length}</b><span>Tiket belum selesai</span></div><div className="card stat"><b>{d.berita.length} / {d.dokumen.length}</b><span>Berita / Dokumen</span></div></div>
+:<><div className="row"><input placeholder="Cari…" value={q} onChange={e=>setQ(e.target.value)} aria-label="Cari"/>{sel&&<select value={fl} onChange={e=>setFl(e.target.value)} aria-label="Filter"><option value="">Semua {sel.l}</option>{sel.opts.map(o=><option key={o}>{o}</option>)}</select>}<button className="btn sm" onClick={()=>setEd({})}>+ Tambah</button></div>
+{ed&&<div className="card mt"><h3>{ed.__e?'Edit':'Tambah'} data</h3><Form key={ed.id??'new'} init={ed.__e?ed:{}} fields={c.f} chk={c.chk} btn="Simpan" onSubmit={save}/><button className="btn sm ghost" onClick={()=>setEd(null)}>Batal</button></div>}
+{rows.length?<div className="scroll mt"><table><thead><tr>{c.f.map(f=><th key={f.n}>{f.l}</th>)}<th>Aksi</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}>{c.f.map(f=><td key={f.n}>{cell(r,f)}</td>)}<td className="row"><button className="btn sm ghost" onClick={()=>setEd({...r,__e:1})}>Edit</button><button className="btn sm red" onClick={()=>{if(confirm('Hapus data ini?'))set(tab,a=>a.filter(x=>x.id!==r.id))}}>Hapus</button></td></tr>)}</tbody></table></div>:<Empty/>}</>}</div></>}
