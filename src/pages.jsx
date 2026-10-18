@@ -1,7 +1,7 @@
-import {Hdr,Empty,Form,Peta} from './layout';
+import {useState} from 'react';import {Link} from 'react-router-dom';
 import {BarChart,Bar,XAxis,YAxis,Tooltip,Legend,ResponsiveContainer,ComposedChart,Line,CartesianGrid} from 'recharts';
 import {Droplets,Wallet,Store as Shop,FileText,MessageSquare,Users} from 'lucide-react';
-import {useStore} from './store';import {rp,sum,bulanan} from './data/mock';import {Hdr,Empty,Form} from './layout';
+import {useStore} from './store';import {rp,sum,bulanan} from './data/mock';import {Hdr,Empty,Form,Peta} from './layout';
 const pct=(a,b)=>b?Math.round(a/b*100):0;
 const Bar_=({v})=><div className="bar"><i style={{width:v+'%'}}/></div>;
 const Stat=({i,l,v})=><div className="card stat">{i}<b>{v}</b><span>{l}</span></div>;
@@ -13,11 +13,12 @@ const go=e=>{e.preventDefault();setR(d.tickets.find(t=>t.id.toLowerCase()===q.tr
 return <div className="card"><h3>Lacak Status (Simulasi)</h3><form className="row" onSubmit={go}><input placeholder="Contoh: DEMO-0001" value={q} onChange={e=>setQ(e.target.value)} aria-label="Nomor tiket"/><button className="btn">Lacak</button></form>
 {r===false&&<p className="err">Nomor tiket tidak ditemukan.</p>}{r&&<p><b>{r.id}</b> — {r.judul}<br/><span className={'badge '+r.status}>{r.status}</span> · {r.tanggal}</p>}</div>}
 export function Home(){const {d}=useStore();const p=d.programs.filter(x=>x.tahun===2026),A=sum(p,'anggaran'),R=sum(p,'realisasi');
-return <><section className="hero"><div className="wrap hero-in"><div><span className="chip">LantoTrasparan · Buton Tengah</span><h1>Informasi Terbuka, Pembangunan Terarah</h1><p>Pantau anggaran, kenali potensi desa, dan akses informasi publik dengan lebih mudah. Bersama, wujudkan Desa Lanto yang transparan dan berkembang.</p><div className="row"><Link className="btn gold" to="/keuangan">Lihat Transparansi</Link><Link className="btn ghost" to="/layanan">Ajukan Layanan</Link></div></div><img className="hero-logo" src="/images/logo-lanto.png" alt="Logo Lanto Transparan"/></div></section>
+return <><section className="hero"><div className="wrap hero-in"><div><span className="chip">Lanto Transparan · Buton Tengah</span><h1>Informasi Terbuka, Pembangunan Terarah</h1><p>Pantau anggaran, kenali potensi desa, dan akses informasi publik dengan lebih mudah. Bersama, wujudkan Desa Lanto yang transparan dan berkembang.</p><div className="row"><Link className="btn gold" to="/keuangan">Lihat Transparansi</Link><Link className="btn ghost" to="/layanan">Ajukan Layanan</Link></div></div><img className="hero-logo" src="/images/logo-lanto.png" alt="Logo Lanto Transparan"/></div></section>
 <div className="wrap sec"><div className="grid g4"><Stat i={<Users/>} l="Penduduk (simulasi)" v="1.126 jiwa"/><Stat i={<Wallet/>} l="Anggaran 2026" v={rp(A)}/><Stat i={<Droplets/>} l="Sambungan air" v="150 rumah"/><Stat i={<Shop/>} l="Unit usaha BUMDes" v={d.units.length}/></div>
 <div className="card mt"><h3>Ringkasan Belanja APBDes 2026</h3><p>Realisasi {rp(R)} dari {rp(A)} ({pct(R,A)}%) · Sisa {rp(A-R)}</p><Bar_ v={pct(R,A)}/></div>
 <h2>Program Desa 2026</h2><div className="grid g3">{p.slice(0,3).map(x=><div className="card" key={x.id}><span className="chip dk">{x.bidang}</span><h3>{x.nama}</h3><p>{rp(x.anggaran)}</p><Bar_ v={pct(x.realisasi,x.anggaran)}/></div>)}</div>
 <h2>Berita & Pengumuman</h2><div className="grid g2">{d.berita.slice(0,4).map(b=><div className="card" key={b.id}><span className={'badge '+(b.kategori==='Pengumuman'?'Diproses':'Selesai')}>{b.kategori}</span><h3>{b.judul}</h3><p>{b.ringkas}</p><small>{b.tanggal}</small></div>)}</div>
+<Peta/>
 <div className="cta"><div><h2>Punya aspirasi atau keluhan?</h2><p>Sampaikan lewat formulir dan dapatkan nomor tiket (simulasi).</p></div><Link className="btn gold" to="/aspirasi">Sampaikan Aspirasi</Link></div></div></>}
 export function Keuangan(){const {d}=useStore();const [y,setY]=useState(2026);const p=d.programs.filter(x=>x.tahun===y),pd=d.pendapatan.filter(x=>x.tahun===y),A=sum(p,'anggaran'),R=sum(p,'realisasi');
 return <><Hdr t="Keuangan Desa" s="APBDes, pendapatan, belanja, dan realisasi (data simulasi)."/><div className="wrap sec">
